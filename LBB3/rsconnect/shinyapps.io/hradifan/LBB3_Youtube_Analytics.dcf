@@ -1,0 +1,14 @@
+name: LBB3_Youtube_Analytics
+title: LBB3_Youtube_Analytics
+username:
+account: hradifan
+server: shinyapps.io
+hostUrl: https://api.shinyapps.io/v1
+appId: 6279258
+bundleId: 5894577
+url: https://hradifan.shinyapps.io/LBB3_Youtube_Analytics/
+when: 1652264952.91819
+lastSyncTime: 1652264952.91819
+asMultiple: FALSE
+asStatic: FALSE
+ignoredFiles: markdown.Rmd

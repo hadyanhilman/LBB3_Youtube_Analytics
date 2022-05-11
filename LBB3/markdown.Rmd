@@ -1,0 +1,159 @@
+---
+title: "Untitled"
+author: "hilman"
+date: "5/10/2022"
+output: html_document
+---
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(echo = TRUE)
+```
+
+```{r}
+library(ggplot2)
+library(scales)
+library(glue)
+library(plotly)
+library(dplyr)
+library(lubridate)
+library(shiny)
+library(shinydashboard)
+library(visdat)
+library(tidyverse)
+library(hrbrthemes)
+```
+
+```{r}
+data <- read.csv("archive/youtubetrends.csv", stringsAsFactors = T,encoding = 'latin1')
+data
+```
+
+
+
+```{r}
+#Take a glimpse of the data
+glimpse(data)
+```
+
+
+```{r}
+vis_miss(data)
+```
+
+
+```{r}
+vids_clean <- data %>% 
+  select(-c(comments_disabled, ratings_disabled, video_error_or_removed)) %>%
+  mutate(trending_date = ymd(trending_date),
+         publish_time = ymd_hms(publish_time),
+         timetotrend = as.integer(timetotrend),
+         title = as.character(title),
+         channel_title = as.character(channel_title),
+         likesp = likes/views,
+         dislikesp = dislikes/views,
+         commentp = as.numeric(comment_count/views))
+
+head(vids_clean)
+```
+```{r}
+publish_time <- vids_clean %>% group_by(publish_when) %>% 
+        summarise(average_views = mean(views)) %>% 
+        arrange(desc(average_views)) %>% 
+        ungroup() %>% mutate(label = glue("Publish When: {publish_when}
+                      Average View: {comma(average_views)}"))
+plot1 <- ggplot(publish_time, aes(x =average_views , y=  reorder(publish_when, average_views), text = label)) +
+  geom_col(aes(fill = average_views)) +
+  scale_fill_gradient(low = "red", high ="black") +
+  labs(title = "Average View Based on Publish Time",
+       x = "average_views",
+       y = NULL) +
+  theme_minimal() +
+  theme(legend.position = "none")
+
+ggplotly(plot1, tooltip = "text")
+
+```
+```{r}
+ p <- ggplot(vids_clean, aes(x=publish_hour)) + 
+  geom_histogram(bins = 10)
+
+ggplotly(p)
+
+```
+
+```{r}
+likes_view <- vids_clean %>% 
+         filter(category_id=="Entertainment")
+
+
+p2 <- ggplot(likes_view, aes(x=likes, y=views)) + 
+    geom_point()+
+    scale_y_continuous(labels = comma)+
+    scale_x_continuous(labels = comma)+
+    geom_smooth(method=lm , color="red", fill="#69b3a2", se=TRUE) +
+    labs(title = "Correllation between likes and views") +
+    theme_ipsum()
+    
+
+ggplotly(p2)
+```
+```{r}
+
+comment_view <- vids_clean %>% 
+         filter(category_id=="Entertainment")
+
+
+p3 <- ggplot(comment_view, aes(x=comment_count, y=views)) + 
+    geom_point()+
+    scale_y_continuous(labels = comma)+
+    scale_x_continuous(labels = comma)+
+    geom_smooth(method=lm , color="red", fill="#69b3a2", se=TRUE) +
+    labs(title = "Correllation between comment and views") +
+    theme_ipsum()
+
+ggplotly(p3)
+
+
+```
+```{r}
+
+dislike_view <- vids_clean %>% 
+         filter(category_id=="Entertainment")
+
+
+p4 <- ggplot(dislike_view, aes(x=dislikes, y=views)) + 
+    geom_point()+
+    scale_y_continuous(labels = comma)+
+    scale_x_continuous(labels = comma)+
+    geom_smooth(method=lm , color="red", fill="#69b3a2", se=TRUE) +
+    labs(title = "Correllation between dislikes and views") +
+    theme_ipsum()
+
+ggplotly(p4)
+
+```
+
+```{r}
+vids_count <- data %>% 
+  group_by(category_id) %>% 
+  summarise(count_cat = n()) %>% 
+  arrange(desc(count_cat)) %>% 
+  ungroup()
+
+vids_count2 <- vids_count %>% 
+  mutate(label = glue("Category {category_id}
+                      Video Count: {count_cat}"))
+
+plot1 <- ggplot(vids_count2, aes(x =count_cat , y=  reorder(category_id, count_cat), text = label)) +
+  geom_col(aes(fill = count_cat)) +
+  scale_fill_gradient(low = "red", high ="black") +
+  labs(title = "Trending Categories of US Youtube 2017",
+       x = "Video_count",
+       y = NULL) +
+  theme_minimal() +
+  theme(legend.position = "none")
+
+ggplotly(plot1, tooltip = "text")
+
+```
+
